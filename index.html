@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Living Research Intelligence System</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            color: white;
+        }
+        
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            max-width: 320px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .agent-status {
+            margin: 8px 0;
+            padding: 8px;
+            border-radius: 6px;
+            border-left: 3px solid;
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .agent-status.coordinator { border-left-color: #4a90e2; }
+        .agent-status.discovery { border-left-color: #50c878; }
+        .agent-status.quality { border-left-color: #ff6b6b; }
+        .agent-status.logic { border-left-color: #ffd93d; }
+        .agent-status.crossRef { border-left-color: #9b59b6; }
+        .agent-status.metaAnalysis { border-left-color: #e67e22; }
+        .agent-status.hypothesis { border-left-color: #3498db; }
+        .agent-status.consensus { border-left-color: #2ecc71; }
+        .agent-status.anomaly { border-left-color: #e74c3c; }
+        
+        .agent-name {
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: #fff;
+        }
+        
+        .agent-operation {
+            color: #bbb;
+            font-style: italic;
+            margin-bottom: 3px;
+        }
+        
+        .agent-communication {
+            color: #4a90e2;
+            font-size: 11px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        
+        .status-active { background: #27ae60; }
+        .status-thinking { background: #f39c12; }
+        .status-idle { background: #95a5a6; }
+        .status-communicating { background: #3498db; }
+        
+        #agentStatuses {
+            margin-top: 15px;
+        }
+        
+        .section-header {
+            font-weight: bold;
+            color: #4a90e2;
+            margin: 15px 0 10px 0;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+        
+        #articleModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #articleContainer {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 800px;
+            height: 90%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #articleHeader {
+            padding: 20px;
+            border-bottom: 1px solid #333;
+            background: rgba(74, 144, 226, 0.2);
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #articleContent {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            line-height: 1.6;
+            font-family: 'Georgia', serif;
+        }
+        
+        #articleActions {
+            padding: 15px 20px;
+            border-top: 1px solid #333;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .close-btn {
+            background: #e74c3c;
+            border: 1px solid #c0392b;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .close-btn:hover {
+            background: #c0392b;
+        }
+        
+        .article-btn {
+            background: #27ae60;
+            border: 1px solid #229954;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .article-btn:hover {
+            background: #229954;
+        }
+        
+        .article-btn.secondary {
+            background: #3498db;
+            border: 1px solid #2980b9;
+        }
+        
+        .article-btn.secondary:hover {
+            background: #2980b9;
+        }
+        
+        h1, h2, h3 {
+            color: #4a90e2;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+        
+        h1 { font-size: 24px; margin-top: 0; }
+        h2 { font-size: 20px; }
+        h3 { font-size: 16px; }
+        
+        .confidence-indicator {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        
+        .confidence-high { background: #27ae60; color: white; }
+        .confidence-medium { background: #f39c12; color: white; }
+        .confidence-low { background: #e74c3c; color: white; }
+        
+        .article-content p {
+            margin-bottom: 1em;
+        }
+        
+        .article-content ul {
+            margin-bottom: 1em;
+            padding-left: 20px;
+        }
+        
+        .article-content li {
+            margin-bottom: 0.5em;
+        }
+        
+        .section-divider {
+            border-top: 1px solid #333;
+            margin: 2em 0 1em 0;
+        }
+        
+        #chatWidget {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 400px;
+            height: 400px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 10px;
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #userInputContainer {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 400px;
+            z-index: 100;
+        }
+        
+        .prompt-input-box {
+            background: rgba(31, 32, 35, 0.95) !important;
+            border: 1px solid #444444 !important;
+            backdrop-filter: blur(10px);
+        }
+        
+        .user-message {
+            background: rgba(74, 144, 226, 0.2);
+            border-left: 3px solid #4a90e2;
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .user-message .agent-name {
+            font-weight: bold;
+            margin-bottom: 2px;
+            font-size: 11px;
+            opacity: 0.8;
+            color: #4a90e2;
+        }
+        
+        .agent-mention {
+            color: #4a90e2;
+            background: rgba(74, 144, 226, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .mention-suggestion {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(31, 32, 35, 0.95);
+            border: 1px solid #444;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        .mention-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .mention-item:hover {
+            background: rgba(74, 144, 226, 0.1);
+        }
+        
+        .mention-item.selected {
+            background: rgba(74, 144, 226, 0.2);
+        }
+        
+        .mention-agent-color {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        #chatHeader {
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            background: rgba(74, 144, 226, 0.2);
+            border-radius: 10px 10px 0 0;
+        }
+        
+        #chatMessages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            scroll-behavior: smooth;
+        }
+        
+        .message {
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            line-height: 1.4;
+            opacity: 0;
+            animation: fadeInMessage 0.3s ease forwards;
+        }
+        
+        @keyframes fadeInMessage {
+            to { opacity: 1; }
+        }
+        
+        .message .agent-name {
+            font-weight: bold;
+            margin-bottom: 2px;
+            font-size: 11px;
+            opacity: 0.8;
+        }
+        
+        .message .timestamp {
+            font-size: 10px;
+            opacity: 0.5;
+            float: right;
+        }
+        
+        .message.coordinator { background: rgba(74, 144, 226, 0.2); border-left: 3px solid #4a90e2; }
+        .message.discovery { background: rgba(80, 200, 120, 0.2); border-left: 3px solid #50c878; }
+        .message.quality { background: rgba(255, 107, 107, 0.2); border-left: 3px solid #ff6b6b; }
+        .message.logic { background: rgba(255, 217, 61, 0.2); border-left: 3px solid #ffd93d; }
+        .message.crossRef { background: rgba(155, 89, 182, 0.2); border-left: 3px solid #9b59b6; }
+        .message.metaAnalysis { background: rgba(230, 126, 34, 0.2); border-left: 3px solid #e67e22; }
+        .message.hypothesis { background: rgba(52, 152, 219, 0.2); border-left: 3px solid #3498db; }
+        .message.consensus { background: rgba(46, 204, 113, 0.2); border-left: 3px solid #2ecc71; }
+        .message.anomaly { background: rgba(231, 76, 60, 0.2); border-left: 3px solid #e74c3c; }
+        .message.system { background: rgba(127, 140, 141, 0.2); border-left: 3px solid #7f8c8d; }
+        
+        /* Custom scrollbar */
+        #chatMessages::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #chatMessages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        #chatMessages::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        #chatMessages::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        .agent-type {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .confidence-bar {
+            width: 100px;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff4444, #ffaa44, #44ff44);
+            transition: width 0.5s ease;
+        }
+        
+        button {
+            background: #2a4d6e;
+            border: 1px solid #4a7cb8;
+            color: white;
+            padding: 8px 12px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #3a5d7e;
+        }
+        
+        button.active {
+            background: #4a7cb8;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="info">
+            <h3>Living Research Intelligence System</h3>
+            <div id="status">
+                <div class="agent-type">Network Status: Active</div>
+                <div>Active Communications: <span id="comms">0</span></div>
+                <div>System Confidence: <span id="confidence">75%</span></div>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" id="confidenceBar" style="width: 75%"></div>
+                </div>
+                <div id="currentActivity">Scanning for new research...</div>
+            </div>
+            
+            <div class="section-header">Agent Status Monitor</div>
+            <div id="agentStatuses">
+                <!-- Agent statuses will be populated here -->
+            </div>
+        </div>
+        
+        <div id="controls">
+            <button onclick="triggerDiscovery()">New Discovery</button>
+            <button onclick="triggerAnomaly()">Anomaly Alert</button>
+            <button onclick="triggerConsensus()">Build Consensus</button>
+            <button onclick="generateResearchArticle()" class="article-btn">📄 Generate Article</button>
+            <button onclick="toggleAnimation()" id="animBtn">Pause</button>
+        </div>
+        
+        <div id="chatWidget">
+            <div id="chatHeader">
+                <h4 style="margin: 0; color: #4a90e2;">🧠 Research Network Chat</h4>
+                <small style="opacity: 0.7;">Live agent communications</small>
+            </div>
+            <div id="chatMessages"></div>
+        </div>
+        
+        <div id="userInputContainer">
+            <div id="mentionSuggestions" class="mention-suggestion" style="display: none;"></div>
+            <div class="prompt-input-box">
+                <div id="userMessageArea">
+                    <textarea 
+                        id="userInput" 
+                        placeholder="Type your message... Use @ to mention agents"
+                        style="
+                            width: 100%;
+                            background: transparent;
+                            border: none;
+                            color: white;
+                            resize: none;
+                            outline: none;
+                            padding: 12px;
+                            font-family: inherit;
+                            font-size: 14px;
+                            min-height: 44px;
+                            max-height: 120px;
+                        "
+                    ></textarea>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px;">
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span style="font-size: 12px; color: #888;">💡 Try: @discovery @quality @consensus</span>
+                    </div>
+                    <button 
+                        id="sendButton"
+                        style="
+                            background: #4a90e2;
+                            border: none;
+                            border-radius: 50%;
+                            width: 32px;
+                            height: 32px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            cursor: pointer;
+                            transition: all 0.2s;
+                        "
+                        onmouseover="this.style.background='#3a7bc8'"
+                        onmouseout="this.style.background='#4a90e2'"
+                    >
+                        <span style="color: white; font-size: 16px;">→</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="articleModal">
+            <div id="articleContainer">
+                <div id="articleHeader">
+                    <div>
+                        <h3 style="margin: 0; color: #4a90e2;">📄 Research Intelligence Report</h3>
+                        <small style="opacity: 0.7;">Generated from current network state</small>
+                    </div>
+                    <button class="close-btn" onclick="closeArticleModal()">✕</button>
+                </div>
+                <div id="articleContent" class="article-content">
+                    <!-- Article content will be generated here -->
+                </div>
+                <div id="articleActions">
+                    <button class="article-btn secondary" onclick="copyArticleToClipboard()">📋 Copy to Clipboard</button>
+                    <button class="article-btn" onclick="downloadArticle()">💾 Download PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        let scene, camera, renderer, agents = [], connections = [], animationRunning = true;
+        let systemConfidence = 75;
+        let communicationCount = 0;
+        let messageCount = 0;
+        let researchFindings = [];
+        let consensusHistory = [];
+        let anomaliesDetected = [];
+        let userInteractions = [];
+        let currentMentionIndex = -1;
+        let mentionedAgents = [];
+
+        // Track user interactions for reporting
+        function addUserInteraction(message, mentions, responses) {
+            userInteractions.push({
+                message: message,
+                mentions: mentions,
+                responses: responses,
+                timestamp: new Date()
+            });
+            // Keep only recent interactions
+            if (userInteractions.length > 20) {
+                userInteractions.shift();
+            }
+        }
+
+        // Agent states
+        const AGENT_STATES = {
+            IDLE: 'idle',
+            THINKING: 'thinking', 
+            ACTIVE: 'active',
+            COMMUNICATING: 'communicating'
+        };
+
+        // Agent mention system
+        const agentMentions = {
+            'coordinator': { name: 'Research Coordinator', color: '#4a90e2' },
+            'discovery': { name: 'Discovery Agent', color: '#50c878' },
+            'quality': { name: 'Quality Agent', color: '#ff6b6b' },
+            'logic': { name: 'Logic Agent', color: '#ffd93d' },
+            'crossref': { name: 'Cross-Reference Agent', color: '#9b59b6' },
+            'metaanalysis': { name: 'Meta-Analysis Agent', color: '#e67e22' },
+            'hypothesis': { name: 'Hypothesis Tracker', color: '#3498db' },
+            'consensus': { name: 'Consensus Builder', color: '#2ecc71' },
+            'anomaly': { name: 'Anomaly Detector', color: '#e74c3c' }
+        };
+
+        function setupUserInput() {
+            const userInput = document.getElementById('userInput');
+            const sendButton = document.getElementById('sendButton');
+            const mentionSuggestions = document.getElementById('mentionSuggestions');
+
+            // Auto-resize textarea
+            userInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+                
+                // Handle @ mentions
+                const text = this.value;
+                const cursorPos = this.selectionStart;
+                const textBeforeCursor = text.substring(0, cursorPos);
+                const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+                
+                if (lastAtIndex !== -1 && lastAtIndex === cursorPos - 1) {
+                    // Just typed @, show all agents
+                    showMentionSuggestions('');
+                } else if (lastAtIndex !== -1) {
+                    const mentionText = textBeforeCursor.substring(lastAtIndex + 1);
+                    if (!mentionText.includes(' ') && mentionText.length > 0) {
+                        showMentionSuggestions(mentionText);
+                    } else if (!mentionText.includes(' ') && mentionText.length === 0) {
+                        showMentionSuggestions('');
+                    } else {
+                        hideMentionSuggestions();
+                    }
+                } else {
+                    hideMentionSuggestions();
+                }
+            });
+
+            // Handle keyboard navigation for mentions
+            userInput.addEventListener('keydown', function(e) {
+                const suggestions = mentionSuggestions.children;
+                
+                if (mentionSuggestions.style.display !== 'none' && suggestions.length > 0) {
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        currentMentionIndex = Math.min(currentMentionIndex + 1, suggestions.length - 1);
+                        updateMentionSelection();
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        currentMentionIndex = Math.max(currentMentionIndex - 1, 0);
+                        updateMentionSelection();
+                    } else if (e.key === 'Enter' || e.key === 'Tab') {
+                        if (currentMentionIndex >= 0) {
+                            e.preventDefault();
+                            selectMention(suggestions[currentMentionIndex].dataset.agent);
+                        }
+                    } else if (e.key === 'Escape') {
+                        hideMentionSuggestions();
+                    }
+                }
+                
+                if (e.key === 'Enter' && !e.shiftKey && mentionSuggestions.style.display === 'none') {
+                    e.preventDefault();
+                    sendUserMessage();
+                }
+            });
+
+            sendButton.addEventListener('click', sendUserMessage);
+        }
+
+        function showMentionSuggestions(searchText) {
+            const mentionSuggestions = document.getElementById('mentionSuggestions');
+            const filteredAgents = Object.entries(agentMentions).filter(([key, agent]) => 
+                agent.name.toLowerCase().includes(searchText.toLowerCase()) ||
+                key.toLowerCase().includes(searchText.toLowerCase())
+            );
+
+            mentionSuggestions.innerHTML = filteredAgents.map(([key, agent]) => `
+                <div class="mention-item" data-agent="${key}">
+                    <div class="mention-agent-color" style="background: ${agent.color};"></div>
+                    <div>
+                        <div style="font-weight: bold; color: ${agent.color};">@${key}</div>
+                        <div style="font-size: 11px; color: #888;">${agent.name}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            mentionSuggestions.style.display = filteredAgents.length > 0 ? 'block' : 'none';
+            currentMentionIndex = 0;
+            updateMentionSelection();
+
+            // Add click handlers
+            mentionSuggestions.querySelectorAll('.mention-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    selectMention(item.dataset.agent);
+                });
+            });
+        }
+
+        function updateMentionSelection() {
+            const suggestions = document.querySelectorAll('.mention-item');
+            suggestions.forEach((item, index) => {
+                if (index === currentMentionIndex) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+        }
+
+        function selectMention(agentKey) {
+            const userInput = document.getElementById('userInput');
+            const text = userInput.value;
+            const cursorPos = userInput.selectionStart;
+            const textBeforeCursor = text.substring(0, cursorPos);
+            const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+            
+            if (lastAtIndex !== -1) {
+                const newText = text.substring(0, lastAtIndex) + `@${agentKey} ` + text.substring(cursorPos);
+                userInput.value = newText;
+                userInput.focus();
+                userInput.setSelectionRange(lastAtIndex + agentKey.length + 2, lastAtIndex + agentKey.length + 2);
+            }
+            
+            hideMentionSuggestions();
+        }
+
+        function hideMentionSuggestions() {
+            document.getElementById('mentionSuggestions').style.display = 'none';
+            currentMentionIndex = -1;
+        }
+
+        function sendUserMessage() {
+            const userInput = document.getElementById('userInput');
+            const message = userInput.value.trim();
+            
+            if (!message) return;
+
+            // Parse mentions
+            const mentions = [];
+            const mentionRegex = /@(\w+)/g;
+            let match;
+            
+            while ((match = mentionRegex.exec(message)) !== null) {
+                const agentKey = match[1].toLowerCase();
+                if (agentMentions[agentKey]) {
+                    mentions.push(agentKey);
+                }
+            }
+
+            // Display user message
+            addUserMessage(message, mentions);
+            
+            // Clear input
+            userInput.value = '';
+            userInput.style.height = 'auto';
+            
+            // Process the message and trigger agent responses
+            processUserMessage(message, mentions);
+        }
+
+        function addUserMessage(message, mentions = []) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            const timestamp = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second: '2-digit'});
+            
+            // Format message with highlighted mentions
+            let formattedMessage = message;
+            mentions.forEach(agentKey => {
+                const agent = agentMentions[agentKey];
+                if (agent) {
+                    const regex = new RegExp(`@${agentKey}`, 'gi');
+                    formattedMessage = formattedMessage.replace(regex, `<span class="agent-mention">@${agentKey}</span>`);
+                }
+            });
+            
+            messageDiv.className = 'user-message';
+            messageDiv.innerHTML = `
+                <div class="timestamp">${timestamp}</div>
+                <div class="agent-name">👤 You</div>
+                <div>${formattedMessage}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            messageCount++;
+            if (messageCount > 100) {
+                chatMessages.removeChild(chatMessages.firstChild);
+                messageCount--;
+            }
+        }
+
+        function processUserMessage(message, mentions) {
+            // If specific agents are mentioned, direct the message to them
+            if (mentions.length > 0) {
+                mentions.forEach(agentKey => {
+                    handleDirectMessage(agentKey, message);
+                });
+            } else {
+                // No specific mentions, let coordinator handle it
+                handleGeneralMessage(message);
+            }
+        }
+
+        function handleDirectMessage(agentKey, message) {
+            const agent = agentMentions[agentKey];
+            if (!agent) return;
+
+            setAgentStatus(agentKey, AGENT_STATES.THINKING, 'Processing user request');
+            
+            setTimeout(() => {
+                let response = '';
+                
+                switch(agentKey) {
+                    case 'discovery':
+                        response = generateDiscoveryResponse(message);
+                        break;
+                    case 'quality':
+                        response = generateQualityResponse(message);
+                        break;
+                    case 'logic':
+                        response = generateLogicResponse(message);
+                        break;
+                    case 'coordinator':
+                        response = generateCoordinatorResponse(message);
+                        break;
+                    case 'consensus':
+                        response = generateConsensusResponse(message);
+                        break;
+                    case 'anomaly':
+                        response = generateAnomalyResponse(message);
+                        break;
+                    case 'hypothesis':
+                        response = generateHypothesisResponse(message);
+                        break;
+                    case 'crossref':
+                        response = generateCrossRefResponse(message);
+                        break;
+                    case 'metaanalysis':
+                        response = generateMetaAnalysisResponse(message);
+                        break;
+                    default:
+                        response = "I'm processing your request. Let me think about this...";
+                }
+                
+                typeMessage(agentKey, response, 0);
+                activateAgent(agentKey, 1, 'Responding to user');
+                
+                setTimeout(() => {
+                    setAgentStatus(agentKey, AGENT_STATES.IDLE, 'Monitoring');
+                }, 3000);
+                
+            }, 1000 + Math.random() * 2000);
+        }
+
+        function handleGeneralMessage(message) {
+            setAgentStatus('coordinator', AGENT_STATES.THINKING, 'Analyzing user request');
+            
+            setTimeout(() => {
+                const response = `I received your message: "${message}". Let me coordinate with the appropriate agents to help you with this request.`;
+                typeMessage('coordinator', response, 0);
+                activateAgent('coordinator', 1, 'Coordinating response');
+                
+                // Potentially trigger other agents based on message content
+                if (message.toLowerCase().includes('discovery') || message.toLowerCase().includes('find') || message.toLowerCase().includes('search')) {
+                    setTimeout(() => handleDirectMessage('discovery', message), 2000);
+                } else if (message.toLowerCase().includes('quality') || message.toLowerCase().includes('methodology')) {
+                    setTimeout(() => handleDirectMessage('quality', message), 2000);
+                } else if (message.toLowerCase().includes('consensus') || message.toLowerCase().includes('agreement')) {
+                    setTimeout(() => handleDirectMessage('consensus', message), 2000);
+                }
+                
+                setTimeout(() => {
+                    setAgentStatus('coordinator', AGENT_STATES.IDLE, 'Monitoring');
+                }, 4000);
+                
+            }, 1000);
+        }
+
+        // Response generators for different agents
+        function generateDiscoveryResponse(message) {
+            const responses = [
+                "🔍 I'm searching through our research databases for information related to your query...",
+                "📚 Let me scan the latest publications that might be relevant to what you're asking about.",
+                "🔎 I found several interesting studies that might address your question. Let me analyze them.",
+                "📖 Your request is interesting! I'm looking through recent research that covers this topic.",
+                "🔍 I'm monitoring several research streams that might provide insights into your question."
+            ];
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        function generateQualityResponse(message) {
+            const responses = [
+                "📊 I'll evaluate the methodology quality of any research related to your question.",
+                "🔬 Let me assess the scientific rigor of studies addressing your topic.",
+                "📈 I'm checking the statistical validity and experimental design of relevant research.",
+                "⚖️ I'll review the evidence quality and identify any methodological concerns.",
+                "📋 I'm applying our quality criteria to evaluate the research supporting this topic."
+            ];
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        function generateLogicResponse(message) {
+            const responses = [
+                "🧮 Let me analyze the logical structure and statistical validity of the arguments.",
+                "📐 I'm checking the reasoning patterns and mathematical foundations.",
+                "🔢 I'll verify the statistical claims and logical consistency.",
+                "🧠 Let me examine the logical flow and identify any reasoning gaps.",
+                "📊 I'm validating the quantitative analysis and inferential logic."
+            ];
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        function generateCoordinatorResponse(message) {
+            const responses = [
+                "🌐 I'll coordinate with the relevant specialists to give you a comprehensive answer.",
+                "🎯 Let me direct your question to the most appropriate agents in our network.",
+                "📋 I'm organizing our team's response to address all aspects of your inquiry.",
+                "🧠 I'll synthesize insights from multiple agents to provide you with the best answer.",
+                "🔄 I'm coordinating a collaborative analysis to address your question thoroughly."
+            ];
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        function generateConsensusResponse(message) {
+            const responses = [
+                "🤝 I'll work to build consensus among our agents regarding your question.",
+                "⚖️ Let me gather different perspectives and work toward a unified understanding.",
+                "🎯 I'm facilitating discussion among agents to reach agreement on this topic.",
+                "🔄 I'll help resolve any disagreements and build collective understanding.",
+                "📊 I'm working to reconcile different viewpoints and establish consensus."
+            ];
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        function generateAnomalyResponse(message) {
+            const responses = [
+                "🚨 I'm scanning for any unusual patterns or contradictory findings related to your question.",
+                "⚠️ Let me check if there are any surprising or unexpected results in this area.",
+                "🔍 I'm looking for outliers or anomalies that might challenge conventional understanding.",
+                "📉 I'll identify any inconsistencies or unexpected findings in the research.",
+                "🎯 I'm monitoring for any paradigm-shifting discoveries related to your topic."
+            ];
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        function generateHypothesisResponse(message) {
+            const responses = [
+                "🤔 I'm tracking how your question relates to our current theoretical frameworks.",
+                "📈 Let me update our confidence levels based on the evidence for your topic.",
+                "🎯 I'm monitoring how this fits with our existing hypotheses and predictions.",
+                "📊 I'll assess how your question impacts our theoretical understanding.",
+                "🔮 I'm evaluating how this relates to our predictive models and theories."
+            ];
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        function generateCrossRefResponse(message) {
+            const responses = [
+                "🔗 I'm cross-referencing your question with our existing knowledge base.",
+                "📚 Let me check how this connects with other research in our database.",
+                "🔍 I'm finding related studies and connecting relevant findings.",
+                "📖 I'll identify supporting and contradictory evidence from our archives.",
+                "🌐 I'm mapping the connections between your question and existing research."
+            ];
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        function generateMetaAnalysisResponse(message) {
+            const responses = [
+                "📈 I'm synthesizing evidence from multiple studies to address your question.",
+                "📊 Let me integrate findings across different research streams.",
+                "🔬 I'm conducting a comprehensive analysis of all relevant evidence.",
+                "📋 I'll provide a quantitative synthesis of the research on this topic.",
+                "🎯 I'm aggregating results from multiple sources to give you a complete picture."
+            ];
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        // Track research state for article generation
+        function addResearchFinding(type, description, confidence) {
+            researchFindings.push({
+                type: type,
+                description: description,
+                confidence: confidence,
+                timestamp: new Date()
+            });
+            // Keep only recent findings
+            if (researchFindings.length > 10) {
+                researchFindings.shift();
+            }
+        }
+
+        function addConsensusEvent(description, finalConfidence) {
+            consensusHistory.push({
+                description: description,
+                confidence: finalConfidence,
+                timestamp: new Date()
+            });
+            // Keep only recent consensus events
+            if (consensusHistory.length > 5) {
+                consensusHistory.shift();
+            }
+        }
+
+        function addAnomalyEvent(description, impact) {
+            anomaliesDetected.push({
+                description: description,
+                impact: impact,
+                timestamp: new Date()
+            });
+            // Keep only recent anomalies
+            if (anomaliesDetected.length > 5) {
+                anomaliesDetected.shift();
+            }
+        }
+
+        // Agent status management
+        function setAgentStatus(agentType, state, operation, communicatingWith = null) {
+            const agent = agents.find(a => a.type === agentType);
+            if (agent) {
+                agent.state = state;
+                agent.operation = operation;
+                agent.communicatingWith = communicatingWith;
+                agent.lastUpdate = new Date();
+                updateAgentStatusDisplay();
+            }
+        }
+
+        function clearAgentCommunication(agentType) {
+            const agent = agents.find(a => a.type === agentType);
+            if (agent && agent.state === AGENT_STATES.COMMUNICATING) {
+                agent.state = AGENT_STATES.IDLE;
+                agent.operation = 'Monitoring';
+                agent.communicatingWith = null;
+                updateAgentStatusDisplay();
+            }
+        }
+
+        function updateAgentStatusDisplay() {
+            const statusContainer = document.getElementById('agentStatuses');
+            if (!statusContainer) return;
+
+            statusContainer.innerHTML = agents.map(agent => {
+                const statusClass = agent.state || AGENT_STATES.IDLE;
+                const operation = agent.operation || 'Monitoring';
+                const communicatingWith = agent.communicatingWith;
+                
+                let communicationText = '';
+                if (communicatingWith) {
+                    if (Array.isArray(communicatingWith)) {
+                        communicationText = `→ ${communicatingWith.map(type => agentTypes[type]?.name || type).join(', ')}`;
+                    } else {
+                        communicationText = `→ ${agentTypes[communicatingWith]?.name || communicatingWith}`;
+                    }
+                }
+
+                return `
+                    <div class="agent-status ${agent.type}">
+                        <div class="agent-name">
+                            <span class="status-indicator status-${statusClass}"></span>
+                            ${agent.data.name}
+                        </div>
+                        <div class="agent-operation">${operation}</div>
+                        ${communicationText ? `<div class="agent-communication">${communicationText}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Agent types and their properties
+        const agentTypes = {
+            coordinator: { color: 0x4a90e2, name: 'Research Coordinator', position: [0, 0, 0] },
+            discovery: { color: 0x50c878, name: 'Discovery Agent', position: [-4, 2, 1] },
+            quality: { color: 0xff6b6b, name: 'Quality Agent', position: [4, 2, -1] },
+            logic: { color: 0xffd93d, name: 'Logic Agent', position: [-2, -2, 2] },
+            crossRef: { color: 0x9b59b6, name: 'Cross-Reference Agent', position: [2, -2, -2] },
+            metaAnalysis: { color: 0xe67e22, name: 'Meta-Analysis Agent', position: [0, 3, 0] },
+            hypothesis: { color: 0x3498db, name: 'Hypothesis Tracker', position: [-3, 0, -1] },
+            consensus: { color: 0x2ecc71, name: 'Consensus Builder', position: [3, 0, 1] },
+            anomaly: { color: 0xe74c3c, name: 'Anomaly Detector', position: [0, -3, 0] }
+        };
+
+        function addChatMessage(agentType, message, isSystem = false) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            const timestamp = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second: '2-digit'});
+            
+            messageDiv.className = `message ${isSystem ? 'system' : agentType}`;
+            
+            if (isSystem) {
+                messageDiv.innerHTML = `
+                    <div class="timestamp">${timestamp}</div>
+                    <div style="font-style: italic; color: #bbb;">🤖 ${message}</div>
+                `;
+            } else {
+                const agentName = agentTypes[agentType]?.name || agentType;
+                messageDiv.innerHTML = `
+                    <div class="timestamp">${timestamp}</div>
+                    <div class="agent-name">${agentName}</div>
+                    <div>${message}</div>
+                `;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            
+            // Auto-scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Limit messages to prevent memory issues
+            messageCount++;
+            if (messageCount > 100) {
+                chatMessages.removeChild(chatMessages.firstChild);
+                messageCount--;
+            }
+        }
+
+        function typeMessage(agentType, message, delay = 0, isSystem = false) {
+            setTimeout(() => {
+                addChatMessage(agentType, message, isSystem);
+            }, delay);
+        }
+
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000, 0);
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 5);
+            scene.add(directionalLight);
+
+            // Create agents
+            createAgents();
+            
+            // Create connections
+            createConnections();
+            
+            // Position camera
+            camera.position.set(8, 5, 8);
+            camera.lookAt(0, 0, 0);
+
+            // Setup user input system
+            setupUserInput();
+
+            // Start animation
+            animate();
+            
+            // Start simulation
+            startSimulation();
+        }
+
+        function createAgents() {
+            Object.keys(agentTypes).forEach(type => {
+                const agentData = agentTypes[type];
+                
+                // Create agent sphere
+                const geometry = new THREE.SphereGeometry(0.3, 16, 16);
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: agentData.color,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                const sphere = new THREE.Mesh(geometry, material);
+                sphere.position.set(...agentData.position);
+                
+                // Create glow effect
+                const glowGeometry = new THREE.SphereGeometry(0.4, 16, 16);
+                const glowMaterial = new THREE.MeshBasicMaterial({
+                    color: agentData.color,
+                    transparent: true,
+                    opacity: 0.2
+                });
+                const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+                glow.position.set(...agentData.position);
+                
+                scene.add(sphere);
+                scene.add(glow);
+                
+                agents.push({
+                    type: type,
+                    sphere: sphere,
+                    glow: glow,
+                    data: agentData,
+                    activity: 0,
+                    pulsePhase: Math.random() * Math.PI * 2,
+                    state: AGENT_STATES.IDLE,
+                    operation: 'Monitoring',
+                    communicatingWith: null,
+                    lastUpdate: new Date()
+                });
+            });
+            
+            // Initialize agent status display
+            setTimeout(() => {
+                updateAgentStatusDisplay();
+            }, 100);
+        }
+
+        function createConnections() {
+            // Create network connections between agents
+            const connectionPairs = [
+                ['coordinator', 'discovery'],
+                ['coordinator', 'quality'],
+                ['coordinator', 'metaAnalysis'],
+                ['discovery', 'quality'],
+                ['quality', 'logic'],
+                ['logic', 'crossRef'],
+                ['crossRef', 'metaAnalysis'],
+                ['metaAnalysis', 'consensus'],
+                ['hypothesis', 'coordinator'],
+                ['anomaly', 'coordinator'],
+                ['anomaly', 'quality'],
+                ['consensus', 'hypothesis'],
+                ['discovery', 'crossRef'],
+                ['quality', 'consensus']
+            ];
+
+            connectionPairs.forEach(pair => {
+                const agent1 = agents.find(a => a.type === pair[0]);
+                const agent2 = agents.find(a => a.type === pair[1]);
+                
+                if (agent1 && agent2) {
+                    const geometry = new THREE.BufferGeometry().setFromPoints([
+                        agent1.sphere.position,
+                        agent2.sphere.position
+                    ]);
+                    
+                    const material = new THREE.LineBasicMaterial({
+                        color: 0x444444,
+                        transparent: true,
+                        opacity: 0.3
+                    });
+                    
+                    const line = new THREE.Line(geometry, material);
+                    scene.add(line);
+                    
+                    connections.push({
+                        line: line,
+                        agent1: agent1,
+                        agent2: agent2,
+                        activity: 0
+                    });
+                }
+            });
+        }
+
+        function animate() {
+            if (!animationRunning) {
+                requestAnimationFrame(animate);
+                return;
+            }
+
+            const time = Date.now() * 0.001;
+
+            // Update agents
+            agents.forEach(agent => {
+                // Pulsing effect based on activity
+                const pulse = Math.sin(time * 2 + agent.pulsePhase) * 0.1 + 1;
+                const activityPulse = agent.activity * 0.5 + 1;
+                
+                agent.sphere.scale.setScalar(pulse * activityPulse);
+                agent.glow.scale.setScalar(pulse * activityPulse * 1.2);
+                
+                // Fade activity over time
+                agent.activity *= 0.95;
+                
+                // Update glow opacity based on activity
+                agent.glow.material.opacity = 0.2 + agent.activity * 0.3;
+            });
+
+            // Update connections
+            connections.forEach(connection => {
+                connection.activity *= 0.9;
+                connection.line.material.opacity = 0.3 + connection.activity * 0.7;
+            });
+
+            // Rotate camera around the system
+            const radius = 10;
+            camera.position.x = Math.cos(time * 0.1) * radius;
+            camera.position.z = Math.sin(time * 0.1) * radius;
+            camera.lookAt(0, 0, 0);
+
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+
+        function activateAgent(agentType, intensity = 1, operation = 'Active') {
+            const agent = agents.find(a => a.type === agentType);
+            if (agent) {
+                agent.activity = Math.max(agent.activity, intensity);
+                setAgentStatus(agentType, AGENT_STATES.ACTIVE, operation);
+                
+                // Auto-clear to idle after some time if no new activity
+                setTimeout(() => {
+                    if (agent.state !== AGENT_STATES.COMMUNICATING) {
+                        setAgentStatus(agentType, AGENT_STATES.IDLE, 'Monitoring');
+                    }
+                }, 3000);
+            }
+        }
+
+        function activateConnection(agent1Type, agent2Type, intensity = 1) {
+            const connection = connections.find(c => 
+                (c.agent1.type === agent1Type && c.agent2.type === agent2Type) ||
+                (c.agent1.type === agent2Type && c.agent2.type === agent1Type)
+            );
+            if (connection) {
+                connection.activity = Math.max(connection.activity, intensity);
+                communicationCount++;
+                updateUI();
+                
+                // Set both agents to communicating state
+                setAgentStatus(agent1Type, AGENT_STATES.COMMUNICATING, 'Communicating', agent2Type);
+                setAgentStatus(agent2Type, AGENT_STATES.COMMUNICATING, 'Communicating', agent1Type);
+                
+                // Clear communication status after delay
+                setTimeout(() => {
+                    clearAgentCommunication(agent1Type);
+                    clearAgentCommunication(agent2Type);
+                }, 2000);
+            }
+        }
+
+        function triggerDiscovery() {
+            document.getElementById('currentActivity').textContent = 'New research discovered!';
+            
+            // Discovery agent finds something
+            activateAgent('discovery', 1);
+            typeMessage('discovery', '🔍 Hey everyone! I just found a fascinating new study about how people solve complex problems. It analyzed over 12,000 participants across 15 different experiments.', 100);
+            
+            setTimeout(() => {
+                activateConnection('discovery', 'quality', 0.8);
+                document.getElementById('currentActivity').textContent = 'Quality assessment in progress...';
+                typeMessage('quality', '📊 Thanks for sharing! Let me check the quality... The methodology looks solid on 12 out of 15 studies. Two have small sample issues and one lacks a proper control group, but overall quite reliable.', 0);
+            }, 1500);
+            
+            setTimeout(() => {
+                activateConnection('quality', 'logic', 0.8);
+                document.getElementById('currentActivity').textContent = 'Logical analysis underway...';
+                typeMessage('logic', '🧮 I ran the numbers - the results are statistically significant and the effect size is substantial. The pattern holds across different age groups and backgrounds. No obvious flaws in the reasoning.', 0);
+            }, 3000);
+            
+            setTimeout(() => {
+                activateConnection('logic', 'crossRef', 0.8);
+                document.getElementById('currentActivity').textContent = 'Cross-referencing with existing knowledge...';
+                typeMessage('crossRef', '🔗 Interesting! This aligns with most of our existing knowledge, but I found 3 studies from 2019-2021 that showed different results. Let me investigate why there might be differences...', 0);
+            }, 4500);
+            
+            setTimeout(() => {
+                activateConnection('crossRef', 'metaAnalysis', 0.8);
+                activateAgent('metaAnalysis', 0.9);
+                document.getElementById('currentActivity').textContent = 'Updating meta-analysis...';
+                typeMessage('metaAnalysis', '📈 Perfect timing! I\'ve integrated this new evidence with our existing analysis. The overall picture is now clearer and more confident. The conflicting studies seem to be explained by differences in methodology quality.', 0);
+                
+                // Update confidence
+                const oldConfidence = systemConfidence;
+                systemConfidence = Math.min(95, systemConfidence + Math.random() * 10 - 3);
+                updateConfidence();
+                
+                // Track research finding
+                addResearchFinding('discovery', 'Large-scale meta-analysis on problem-solving patterns with 12,000+ participants showing significant effects across diverse populations', systemConfidence);
+            }, 6000);
+            
+            setTimeout(() => {
+                document.getElementById('currentActivity').textContent = 'Integration complete. Monitoring for new findings...';
+                typeMessage('coordinator', '✅ Excellent work team! Our understanding just got ' + Math.round(systemConfidence) + '% confidence level. I\'ll keep monitoring for related research. Great collaboration everyone!', 0);
+            }, 7500);
+        }
+
+        function triggerAnomaly() {
+            document.getElementById('currentActivity').textContent = 'ANOMALY DETECTED!';
+            
+            // Anomaly detector activates
+            activateAgent('anomaly', 1);
+            typeMessage('anomaly', '🚨 ALERT EVERYONE! I just found a study that completely contradicts what we thought we knew! It\'s well-designed with over 3,000 participants, but shows the opposite effect. This is concerning...', 100);
+            
+            setTimeout(() => {
+                activateConnection('anomaly', 'coordinator', 1);
+                activateConnection('anomaly', 'quality', 0.9);
+                document.getElementById('currentActivity').textContent = 'Alert sent to coordination and quality teams...';
+                typeMessage('coordinator', '⚡ I got your alert! This is high priority. Everyone pause what you\'re doing - we need to investigate this immediately. Quality team, please review this study ASAP.', 0);
+                typeMessage('quality', '🔍 On it! Let me do an emergency review... Oh wow, the methodology actually looks really solid. Large sample, randomized controlled trial. This is genuinely concerning if it contradicts our findings.', 800);
+            }, 1800);
+            
+            setTimeout(() => {
+                activateAgent('coordinator', 0.9);
+                activateConnection('coordinator', 'hypothesis', 0.8);
+                document.getElementById('currentActivity').textContent = 'Hypothesis tracker updating theories...';
+                typeMessage('hypothesis', '🤔 This is shaking up our confidence levels. I\'m dropping our main theory from 87% confidence down to 54%. We need to seriously reconsider what we think we know about this topic.', 0);
+                
+                // Confidence might drop due to anomaly
+                const oldConfidence = systemConfidence;
+                systemConfidence = Math.max(20, systemConfidence - Math.random() * 15);
+                updateConfidence();
+                
+                // Track anomaly
+                addAnomalyEvent('High-quality study with 3,000+ participants showing contradictory results to established findings', 'Major confidence reduction');
+            }, 3500);
+            
+            setTimeout(() => {
+                document.getElementById('currentActivity').textContent = 'Anomaly investigation in progress...';
+                typeMessage('crossRef', '🔎 I\'m doing an emergency search through all our historical data... Found 2 similar surprising results from 2018 that we didn\'t pay enough attention to. This might be a pattern we missed!', 0);
+            }, 5000);
+            
+            setTimeout(() => {
+                typeMessage('coordinator', '📋 Alright team, this is a learning moment. I\'m flagging this for human researchers to review. Let\'s adjust our confidence in related theories until we understand what\'s happening here.', 0);
+            }, 6500);
+        }
+
+        function triggerConsensus() {
+            document.getElementById('currentActivity').textContent = 'Building consensus across network...';
+            
+            // Consensus builder activates
+            activateAgent('consensus', 1);
+            typeMessage('consensus', '🤝 Time to bring everyone together! We have some disagreement in our network - about 23% of our analysis points to different conclusions. Let\'s work through this systematically.', 100);
+            
+            setTimeout(() => {
+                activateConnection('consensus', 'hypothesis', 0.8);
+                activateConnection('consensus', 'metaAnalysis', 0.8);
+                document.getElementById('currentActivity').textContent = 'Gathering evidence from hypothesis and meta-analysis...';
+                typeMessage('hypothesis', '📊 Here\'s where we stand: Our main theory has 67% support, the alternative explanation has 28%, and there\'s a 5% chance we\'re missing something entirely. We\'re in moderate confidence territory.', 0);
+                typeMessage('metaAnalysis', '📈 I\'ve been tracking 1,247 studies on this topic. The effects we see range from small to large, but the differences seem to depend on how the studies were designed and who participated.', 500);
+            }, 1500);
+            
+            setTimeout(() => {
+                activateConnection('metaAnalysis', 'coordinator', 0.9);
+                activateAgent('coordinator', 0.8);
+                document.getElementById('currentActivity').textContent = 'Coordinator synthesizing final consensus...';
+                typeMessage('coordinator', '🧠 Let me bring this all together... After weighing all the evidence, I think we\'re converging on a more nuanced understanding. The effect seems to depend on the specific population being studied.', 0);
+                
+                // Consensus building usually increases confidence
+                systemConfidence = Math.min(90, systemConfidence + Math.random() * 8);
+                updateConfidence();
+                
+                // Track consensus
+                addConsensusEvent('Network reached consensus on population-dependent effects model through collaborative analysis', systemConfidence);
+            }, 3000);
+            
+            setTimeout(() => {
+                // Broadcast to all agents
+                agents.forEach(agent => {
+                    activateAgent(agent.type, 0.6);
+                });
+                document.getElementById('currentActivity').textContent = 'Consensus reached. Broadcasting to all agents...';
+                typeMessage('consensus', '📢 TEAM ANNOUNCEMENT: We\'ve reached consensus at ' + Math.round(systemConfidence) + '% confidence! Our refined understanding: the effect varies depending on the population studied. Everyone please update your knowledge.', 0);
+            }, 4500);
+            
+            setTimeout(() => {
+                document.getElementById('currentActivity').textContent = 'Network updated with new consensus. Monitoring continues...';
+                typeMessage('discovery', '✅ Got it! I\'ll adjust my search to look for more studies that separate different populations.', 0);
+                typeMessage('quality', '✅ Understood. I\'ll now require studies to clearly define their participant groups for quality approval.', 300);
+                typeMessage('logic', '✅ Makes sense. I\'ll update my analysis frameworks to account for population differences.', 600);
+                typeMessage('', 'Network consensus achieved. Collective intelligence has been enhanced through collaboration.', 1000, true);
+            }, 6000);
+        }
+
+        function toggleAnimation() {
+            animationRunning = !animationRunning;
+            const btn = document.getElementById('animBtn');
+            btn.textContent = animationRunning ? 'Pause' : 'Resume';
+            btn.classList.toggle('active', !animationRunning);
+        }
+
+        function updateConfidence() {
+            document.getElementById('confidence').textContent = Math.round(systemConfidence) + '%';
+            document.getElementById('confidenceBar').style.width = systemConfidence + '%';
+        }
+
+        function updateUI() {
+            document.getElementById('comms').textContent = communicationCount;
+        }
+
+        function startSimulation() {
+            // Initialize all agents to monitoring state
+            agents.forEach(agent => {
+                setAgentStatus(agent.type, AGENT_STATES.IDLE, 'Monitoring');
+            });
+            
+            // Welcome message
+            setTimeout(() => {
+                typeMessage('', 'Research Intelligence Network is starting up. All agents are coming online and getting ready to collaborate.', 0, true);
+                setAgentStatus('coordinator', AGENT_STATES.ACTIVE, 'Network initialization');
+                typeMessage('coordinator', '🌐 Hello everyone! Network is operational. All 9 of our specialist agents are active and ready. Let\'s begin our continuous research monitoring...', 1000);
+                setAgentStatus('discovery', AGENT_STATES.ACTIVE, 'Activating discovery protocols');
+                typeMessage('discovery', '🔍 Discovery systems are running! I\'m actively monitoring research databases and preprint servers for new findings that might interest us.', 2000);
+                setAgentStatus('quality', AGENT_STATES.ACTIVE, 'Loading quality assessment tools');
+                typeMessage('quality', '📊 Quality assessment tools are loaded and ready. I\'ll help evaluate any new research we find to make sure it meets our standards.', 2500);
+                typeMessage('', 'Everything is ready! Use the interactive buttons to see how our agents collaborate on different research scenarios.', 4000, true);
+                
+                // Set all back to monitoring after startup
+                setTimeout(() => {
+                    agents.forEach(agent => {
+                        setAgentStatus(agent.type, AGENT_STATES.IDLE, 'Monitoring');
+                    });
+                }, 5000);
+            }, 2000);
+            
+            // Periodic background activity
+            setInterval(() => {
+                if (animationRunning && Math.random() > 0.7) {
+                    const activities = [triggerDiscovery, triggerAnomaly, triggerConsensus];
+                    const randomActivity = activities[Math.floor(Math.random() * activities.length)];
+                    
+                    // Only trigger if not currently busy
+                    if (document.getElementById('currentActivity').textContent.includes('Monitoring') || 
+                        document.getElementById('currentActivity').textContent.includes('Scanning')) {
+                        randomActivity();
+                    }
+                }
+            }, 15000); // Increased interval to allow chat to be readable
+            
+            // Reset communication count periodically
+            setInterval(() => {
+                communicationCount = Math.max(0, communicationCount - 1);
+                updateUI();
+            }, 2000);
+            
+            // Periodic status cleanup for idle agents
+            setInterval(() => {
+                agents.forEach(agent => {
+                    if (agent.state === AGENT_STATES.ACTIVE && 
+                        (new Date() - agent.lastUpdate) > 5000) {
+                        setAgentStatus(agent.type, AGENT_STATES.IDLE, 'Monitoring');
+                    }
+                });
+            }, 5000);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Article generation functions
+        function generateResearchArticle() {
+            const currentDate = new Date().toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            const confidenceClass = systemConfidence >= 80 ? 'confidence-high' : 
+                                   systemConfidence >= 60 ? 'confidence-medium' : 'confidence-low';
+            
+            const confidenceText = systemConfidence >= 80 ? 'High' : 
+                                  systemConfidence >= 60 ? 'Moderate' : 'Low';
+
+            const article = `
+<h1>Research Intelligence Network Report</h1>
+<p><strong>Generated:</strong> ${currentDate}</p>
+<p><strong>Network Status:</strong> Active <span class="confidence-indicator ${confidenceClass}">${confidenceText} Confidence (${Math.round(systemConfidence)}%)</span></p>
+
+<div class="section-divider"></div>
+
+<h2>Executive Summary</h2>
+<p>This report represents the current state of understanding developed by our distributed research intelligence network. Through continuous monitoring, collaborative analysis, and direct user interactions, our specialized agents have processed and synthesized findings from multiple research streams to provide this comprehensive overview.</p>
+
+<p>Our network currently operates at <strong>${Math.round(systemConfidence)}% confidence</strong> in our primary findings, based on collaborative analysis involving quality assessment, logical validation, cross-referencing, and consensus-building processes.</p>
+
+<h2>User Interaction Summary</h2>
+${userInteractions.length > 0 ? `
+<p>The network has processed <strong>${userInteractions.length}</strong> direct user interactions, demonstrating active engagement with human researchers and stakeholders.</p>
+${userInteractions.slice(-5).map(interaction => `
+<h3>User Query - ${interaction.timestamp.toLocaleDateString()}</h3>
+<p><strong>Query:</strong> "${interaction.message}"</p>
+<p><strong>Agents Engaged:</strong> ${interaction.mentions.length > 0 ? interaction.mentions.map(m => agentMentions[m]?.name || m).join(', ') : 'General coordination'}</p>
+`).join('')}
+` : '<p>No recent user interactions recorded. The network operates autonomously while remaining available for direct consultation.</p>'}
+
+<h2>Current Research Focus</h2>
+<p>The network is actively investigating patterns in human cognitive processing, with particular attention to problem-solving mechanisms and reasoning strategies. Our analysis incorporates both quantitative meta-analytical approaches and qualitative pattern recognition across diverse populations and methodologies.</p>
+
+<h2>Recent Significant Findings</h2>
+${researchFindings.length > 0 ? researchFindings.map(finding => `
+<h3>${finding.type.charAt(0).toUpperCase() + finding.type.slice(1)} Event</h3>
+<p><strong>Date:</strong> ${finding.timestamp.toLocaleDateString()}</p>
+<p><strong>Description:</strong> ${finding.description}</p>
+<p><strong>Confidence Impact:</strong> Adjusted to ${Math.round(finding.confidence)}%</p>
+`).join('') : '<p>No recent findings recorded. The network is currently in monitoring mode, scanning for new developments.</p>'}
+
+<div class="section-divider"></div>
+
+<h2>Network Consensus History</h2>
+${consensusHistory.length > 0 ? consensusHistory.map(consensus => `
+<h3>Consensus Event - ${consensus.timestamp.toLocaleDateString()}</h3>
+<p>${consensus.description}</p>
+<p><strong>Final Confidence Level:</strong> ${Math.round(consensus.confidence)}%</p>
+`).join('') : '<p>No recent consensus events recorded. The network continues collaborative analysis to build unified understanding.</p>'}
+
+<div class="section-divider"></div>
+
+<h2>Anomalies and Challenges</h2>
+${anomaliesDetected.length > 0 ? anomaliesDetected.map(anomaly => `
+<h3>Anomaly Detected - ${anomaly.timestamp.toLocaleDateString()}</h3>
+<p><strong>Description:</strong> ${anomaly.description}</p>
+<p><strong>Impact:</strong> ${anomaly.impact}</p>
+`).join('') : '<p>No significant anomalies detected in recent analysis. The network maintains vigilance for contradictory or unexpected findings that may challenge current understanding.</p>'}
+
+<div class="section-divider"></div>
+
+<h2>Agent Collaboration Patterns</h2>
+<p>The network utilizes A2A (Agent-to-Agent) protocol for seamless communication and task coordination. Key collaboration patterns observed include:</p>
+<ul>
+<li><strong>Direct User Engagement:</strong> Users can @ mention specific agents for specialized queries</li>
+<li><strong>Hierarchical Task Delegation:</strong> Coordinator agent routes complex queries to appropriate specialists</li>
+<li><strong>Peer-to-Peer Validation:</strong> Agents cross-validate each other's findings</li>
+<li><strong>Consensus Building:</strong> Network-wide agreement through collaborative discussion</li>
+<li><strong>Anomaly Response:</strong> Coordinated investigation of unexpected findings</li>
+</ul>
+
+<h2>Methodology</h2>
+<p>This research synthesis is generated through a distributed multi-agent network employing the following specialized roles:</p>
+<ul>
+<li><strong>Discovery Agents:</strong> Continuous monitoring of research databases and preprint servers</li>
+<li><strong>Quality Assessment:</strong> Methodological evaluation using established research standards</li>
+<li><strong>Logical Analysis:</strong> Statistical validation and reasoning verification</li>
+<li><strong>Cross-Reference Validation:</strong> Comparison with existing knowledge base and identification of contradictions</li>
+<li><strong>Meta-Analysis Integration:</strong> Quantitative synthesis of findings across studies</li>
+<li><strong>Hypothesis Tracking:</strong> Maintenance of theoretical frameworks and confidence metrics</li>
+<li><strong>Consensus Building:</strong> Collaborative resolution of disagreements and unified understanding</li>
+<li><strong>Anomaly Detection:</strong> Identification of outlier findings requiring investigation</li>
+<li><strong>Coordination:</strong> Overall network management and priority setting</li>
+</ul>
+
+<h2>Interactive Features</h2>
+<p>The network supports direct user interaction through several mechanisms:</p>
+<ul>
+<li><strong>@ Mention System:</strong> Users can directly address specific agents (e.g., @discovery, @quality, @consensus)</li>
+<li><strong>General Queries:</strong> Open-ended questions routed automatically to appropriate specialists</li>
+<li><strong>Real-time Response:</strong> Immediate agent engagement with user queries</li>
+<li><strong>Multi-agent Coordination:</strong> Complex queries trigger collaborative responses from multiple agents</li>
+</ul>
+
+<h2>Current Understanding</h2>
+<p>Based on our collaborative analysis, the network has identified that cognitive processing patterns vary significantly across different populations and contexts. The evidence suggests that while general principles of human reasoning exist, their expression and effectiveness are modulated by factors including:</p>
+<ul>
+<li>Population demographics and cultural background</li>
+<li>Methodological approaches used in assessment</li>
+<li>Context and domain of problem-solving tasks</li>
+<li>Individual differences in cognitive architecture</li>
+</ul>
+
+<h2>Areas of Uncertainty</h2>
+<p>The network acknowledges several areas where confidence remains moderate to low:</p>
+<ul>
+<li>Long-term stability of observed effects across different time periods</li>
+<li>Generalizability across cultures and educational systems not yet studied</li>
+<li>Integration of contradictory findings from high-quality studies</li>
+<li>Optimal methodological approaches for future research</li>
+</ul>
+
+<h2>Future Research Priorities</h2>
+<p>Based on current gaps in understanding and user interactions, the network recommends prioritizing:</p>
+<ul>
+<li>Population-specific studies to understand demographic moderating factors</li>
+<li>Longitudinal research to assess stability of cognitive patterns over time</li>
+<li>Cross-cultural validation of findings in diverse global contexts</li>
+<li>Methodological standardization to reduce study-to-study variability</li>
+<li>Investigation of individual difference factors that predict cognitive processing patterns</li>
+<li>Enhanced user interaction capabilities for more sophisticated human-AI collaboration</li>
+</ul>
+
+<div class="section-divider"></div>
+
+<h2>Network Status</h2>
+<p><strong>Active Agents:</strong> 9 specialized intelligence agents</p>
+<p><strong>Communication Events:</strong> ${communicationCount} active exchanges</p>
+<p><strong>User Interactions:</strong> ${userInteractions.length} direct consultations</p>
+<p><strong>Monitoring Status:</strong> Continuous surveillance of research literature</p>
+<p><strong>Last Update:</strong> ${new Date().toLocaleTimeString()}</p>
+
+<h2>Conclusion</h2>
+<p>The research intelligence network continues to evolve its understanding through collaborative analysis, evidence synthesis, and direct user engagement. With ${Math.round(systemConfidence)}% confidence in current findings, the network maintains both conviction in established patterns and openness to paradigm-shifting discoveries.</p>
+
+<p>The integration of user interaction capabilities through @ mention functionality has enhanced the network's ability to provide targeted, specialized responses while maintaining its autonomous research capabilities. This human-AI collaboration model represents a significant advancement in research intelligence systems.</p>
+
+<p>This living document reflects the current state of collective intelligence and will continue to evolve as new evidence emerges, consensus develops, and user interactions provide new research directions.</p>
+
+<p><em>This report was automatically generated by the Research Intelligence Network on ${currentDate}. For questions about methodology or findings, please consult the network using @ mentions in the chat interface or review the detailed agent communications.</em></p>
+            `;
+
+            document.getElementById('articleContent').innerHTML = article;
+            document.getElementById('articleModal').style.display = 'flex';
+            
+            // Add message to chat
+            typeMessage('coordinator', '📄 Research article generated! Current network state has been synthesized into a comprehensive report including user interactions with ' + Math.round(systemConfidence) + '% confidence level.', 0);
+        }
+
+        function closeArticleModal() {
+            document.getElementById('articleModal').style.display = 'none';
+        }
+
+        function copyArticleToClipboard() {
+            const articleContent = document.getElementById('articleContent');
+            const textContent = articleContent.innerText;
+            
+            navigator.clipboard.writeText(textContent).then(() => {
+                // Temporary feedback
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                btn.style.background = '#27ae60';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#3498db';
+                }, 2000);
+                
+                typeMessage('', 'Research article copied to clipboard successfully.', 0, true);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                alert('Copy failed. Please try selecting and copying the text manually.');
+            });
+        }
+
+        function downloadArticle() {
+            const articleContent = document.getElementById('articleContent').innerHTML;
+            const fullHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Research Intelligence Network Report</title>
+    <style>
+        body { font-family: Georgia, serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1, h2, h3 { color: #4a90e2; }
+        .confidence-indicator { 
+            display: inline-block; padding: 2px 8px; border-radius: 12px; 
+            font-size: 12px; font-weight: bold; margin-left: 8px; 
+        }
+        .confidence-high { background: #27ae60; color: white; }
+        .confidence-medium { background: #f39c12; color: white; }
+        .confidence-low { background: #e74c3c; color: white; }
+        .section-divider { border-top: 1px solid #ddd; margin: 2em 0 1em 0; }
+    </style>
+</head>
+<body>
+    ${articleContent}
+</body>
+</html>
+            `;
+            
+            const blob = new Blob([fullHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
+            a.href = url;
+            a.download = `Research-Intelligence-Report-${timestamp}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            typeMessage('', 'Research article downloaded as HTML file. You can open it in any browser or convert to PDF.', 0, true);
+        }
+
+        // Initialize the visualization
+        init();
+    </script>
+</body>
+</html>
